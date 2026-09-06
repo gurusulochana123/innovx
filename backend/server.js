@@ -1,0 +1,49 @@
+const express = require('express');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const connectDB = require('./config/db');
+const seedData = require('./utils/seedData');
+
+// Load environment variables
+dotenv.config();
+
+const app = express();
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Connect DB & Seed
+connectDB().then(() => {
+  seedData();
+});
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'OK', message: 'ClearCampus API Engine Operational 🚀', timestamp: new Date() });
+});
+
+// Mounting API Routes
+app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/clearance', require('./routes/clearanceRoutes'));
+app.use('/api/department', require('./routes/departmentRoutes'));
+app.use('/api/admin', require('./routes/adminRoutes'));
+app.use('/api/notifications', require('./routes/notificationRoutes'));
+app.use('/api/certificate', require('./routes/certificateRoutes'));
+app.use('/api/verify', require('./routes/certificateRoutes'));
+
+// Global Error Handler
+app.use((err, req, res, next) => {
+  console.error('Server error:', err.stack);
+  res.status(err.status || 500).json({
+    message: err.message || 'Internal Server Error',
+  });
+});
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`================================================`);
+  console.log(` ClearCampus Backend Running on Port ${PORT}`);
+  console.log(` API Endpoint: http://localhost:${PORT}/api`);
+  console.log(`================================================`);
+});
